@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.cache/
+.data/
+coverage/
+test-results/
+*.log
