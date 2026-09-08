@@ -1,68 +1,53 @@
 # Job Portal Backend
 
-A backend project where job seekers apply for jobs, employers post jobs, and admins manage users and jobs. It uses Node.js, Express, MongoDB, Mongoose, JWT, bcryptjs and cookies.
+A college mini-project for posting jobs and applying for them. This is a backend API, tested with Postman.
 
-## Features
+**Tools:** Node.js, Express, MongoDB, Mongoose, bcryptjs, JWT, cookie-parser and dotenv.
 
-- Job seekers can register, log in, update their profile and apply for jobs.
-- Employers can manage their own jobs and review applications.
-- Admins can view users and jobs, suspend users and remove records.
-- Passwords are hashed. Login uses a JWT in an httpOnly cookie.
-- A user cannot apply for the same job twice.
+## Roles and models
 
-The database has three models: User, Job and Application. Skills, education and experience are stored in the user profile. Applications link a user to a job.
+- **Job Seeker** (`jobseeker`): manage their profile, browse jobs and apply.
+- **Employer** (`employer`): manage their own jobs and review applications.
+- **Admin** (`admin`): manage users, suspend accounts and remove jobs.
 
-## How to Run
+There are three models: **User**, **Job** and **Application**.
+Skills, education and experience are embedded in User; salaryRange is embedded in Job.
+Job references its employer through `employerId`. Application references `applicantId` and `jobId`.
 
-Install Node.js 22.12 or later and open a terminal in this folder.
+Passwords are hashed. Login saves a one-day JWT in an httpOnly `accessToken` cookie.
+Middleware checks the user and role. Logout ends the account's sessions.
+Removed users and jobs are hidden, while old applications keep their references.
 
-1. Install the packages:
+## Run locally
 
-   ```sh
-   npm install
-   ```
+Use Node.js 22.12 or later and have MongoDB running.
 
-2. Copy `.env.example` to `.env` if you do not have one. Set a random `JWT_SECRET` of at least 32 characters and your admin name, email and password. Use at least 8 characters for the password. Keep the other settings for local use.
+1. Run `npm install`.
+2. Copy `.env.example` to `.env`, or keep your existing `.env`.
+3. Set `MONGO_URI`, a random `JWT_SECRET` of at least 32 characters, and the three `ADMIN_*` values. Passwords need at least 8 characters and at most 72 bytes. `PORT` defaults to 5000.
+4. Run `npm start`, or `npm run dev` to restart automatically after edits.
+5. In another terminal, run `npm run seed:admin`. It creates the admin without resetting an existing account.
 
-3. Start the server and local MongoDB:
+Check [localhost:5000/api/health](http://localhost:5000/api/health). Keep your real `.env` private.
 
-   ```sh
-   npm run local
-   ```
+## Main endpoints
 
-   The first run downloads MongoDB if needed. Your data is saved after restarting.
+Paths below follow the prefix in the first column. Use JSON request bodies.
 
-4. Keep it running and open another terminal to create the admin:
+| Prefix | Endpoints |
+| --- | --- |
+| `/jobSeeker-api` | POST `/users`, `/users/login`; GET/PUT `/users`; GET `/jobs`, `/jobs/:jobId`; POST `/jobs/:jobId/apply`; GET `/applications` |
+| `/employer-api` | POST `/users`, `/users/login`; POST/GET `/jobs`; GET/PUT/DELETE `/jobs/:jobId`; GET `/applications`; PUT `/applications/:applicationId` |
+| `/admin-api` | POST `/admin/login`; GET `/users`, `/users/:userId`; PUT `/users/:userId/status`; DELETE `/users/:userId`; GET `/jobs`, `/jobs/:jobId`; DELETE `/jobs/:jobId` |
 
-   ```sh
-   npm run seed:admin
-   ```
+Each prefix also has POST `/logout`. Admin routes require admin login.
 
-Check the server: [localhost:5000/api/health](http://localhost:5000/api/health).
+Jobs use `active` or `closed`. Applications use `pending`, `reviewing`, `accepted` or `rejected`.
 
-## Testing
+## Postman
 
-There is no frontend. Use Postman to test the API.
+Import `job-portal.postman_collection.json`. Set its `adminEmail` and `adminPassword` variables to your local admin details, then run the whole collection in order.
 
-With the server running, run:
+It creates sample users and jobs, saves their IDs, and uses Postman's cookie jar after login. It also checks missing tokens, wrong roles, duplicate applications and another employer's access. It removes its sample records at the end.
 
-```sh
-npm run postman:local
-```
-
-Import these files into Postman:
-
-- `postman/Job_Portal_API.postman_collection.json`
-- `.cache/local.postman_environment.json`
-
-Select the imported environment and run the collection from **Health**. It includes the routes and sample request bodies for login, profiles, jobs, applications and admin actions.
-
-Keep `.env` and the generated Postman environment private because they contain login details.
-
-To run the automated tests:
-
-```sh
-npm test
-npm run test:postman
-```
-
+This refactor replaces the old `/api/auth`, `/api/jobs` and related routes with the role prefixes above. Use the new collection. Existing local accounts and records were preserved.

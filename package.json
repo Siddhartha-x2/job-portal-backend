@@ -7,14 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "demo": "node scripts/demo.js",
-    "local": "node scripts/local.js",
-    "seed:admin": "node scripts/seedAdmin.js",
-    "token:expired": "node scripts/expired-token.js",
-    "postman:local": "node scripts/exportPostman.js",
-    "test": "node --test --test-concurrency=1 tests/*.test.js",
-    "test:postman": "node scripts/test-postman.js",
-    "check": "node scripts/check.js"
+    "seed:admin": "node scripts/seedAdmin.js"
   },
   "engines": {
     "node": ">=22.12.0"
@@ -24,15 +17,7 @@
     "cookie-parser": "1.4.7",
     "dotenv": "17.4.2",
     "express": "5.2.1",
-    "express-rate-limit": "8.7.0",
-    "helmet": "8.3.0",
     "jsonwebtoken": "9.0.3",
-    "mongoose": "9.9.5",
-    "zod": "4.5.4"
-  },
-  "devDependencies": {
-    "mongodb-memory-server-core": "11.2.0",
-    "newman": "6.2.2",
-    "supertest": "7.2.2"
+    "mongoose": "9.9.5"
   }
 }

@@ -1,29 +1,27 @@
 require('dotenv').config({ quiet: true });
 const mongoose = require('mongoose');
-const { z } = require('zod');
-const User = require('../models/User');
-const { connectDatabase } = require('../config/db');
+const User = require('../models/userModel');
 
-async function seed() {
-  const account = z.object({
-    name: z.string().trim().min(2).max(80), email: z.email().toLowerCase(),
-    password: z.string().min(8).refine(value => Buffer.byteLength(value) <= 72)
-  }).parse({ name: process.env.ADMIN_NAME || 'Portal Admin', email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD });
-  if (!process.env.MONGO_URI) throw new Error('Set MONGO_URI in .env');
-  await connectDatabase(process.env.MONGO_URI);
-  const existing = await User.findOne({ email: account.email });
+async function seedAdmin() {
+  const { MONGO_URI, ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
+  if (!MONGO_URI || !ADMIN_NAME || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
+    throw new Error('Set MONGO_URI, ADMIN_NAME, ADMIN_EMAIL and ADMIN_PASSWORD in .env');
+  }
+  await mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 10000 });
+  await User.init();
+  const existing = await User.findOne({ email: ADMIN_EMAIL.trim().toLowerCase() });
   if (existing) {
-    if (existing.role !== 'admin' || existing.deletedAt || existing.status !== 'active') {
-      throw new Error('That email belongs to a non-admin or inactive account. Choose a different admin email.');
+    if (existing.role !== 'admin' || existing.status !== 'active' || existing.deletedAt) {
+      throw new Error('Choose another email; this account is not an active admin');
     }
-    console.log('Admin already exists. Password was not changed.');
+    console.log('Admin already exists. Password unchanged.');
     return;
   }
-  await User.create({ ...account, role: 'admin' });
-  console.log('Admin account created. Log in through POST /api/auth/login.');
+  await User.create({ name: ADMIN_NAME, email: ADMIN_EMAIL, password: ADMIN_PASSWORD, role: 'admin' });
+  console.log('Admin created. Log in at POST /admin-api/admin/login.');
 }
 
-seed().catch(err => {
-  console.error(err.name === 'ZodError' ? 'Set a valid ADMIN_EMAIL and ADMIN_PASSWORD (at least 8 characters and at most 72 UTF-8 bytes) in .env.' : err.message);
+seedAdmin().catch(error => {
+  console.error('Admin setup failed:', error.name === 'ValidationError' ? 'Check the admin name, email and password (8 to 72 bytes).' : error.message);
   process.exitCode = 1;
 }).finally(() => mongoose.disconnect());
