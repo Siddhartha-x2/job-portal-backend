@@ -38,6 +38,7 @@ router.get('/users', (req, res) => {
 });
 
 router.put('/users', async (req, res) => {
+  // A profile update must not change the password, role or account status.
   const fields = ['name', 'skills', 'education', 'experience'];
   if (!Object.keys(req.body).length || Object.keys(req.body).some(key => !fields.includes(key))) {
     return res.status(400).json({ success: false, message: 'Only name, skills, education and experience can be updated' });

@@ -20,6 +20,7 @@ async function verifyToken(req, res, next) {
   const user = await User.findOne({ _id: decoded.id, deletedAt: null }).select('+tokenVersion');
   if (!user) return res.status(401).json({ success: false, message: 'User no longer exists' });
   if (user.status === 'suspended') return res.status(403).json({ success: false, message: 'Account suspended' });
+  // v is the login version. Logout or suspension makes older cookies invalid.
   if (decoded.v !== user.tokenVersion) return res.status(401).json({ success: false, message: 'Please log in again' });
   req.user = { ...decoded, role: user.role };
   req.profile = user;

@@ -39,6 +39,7 @@ const userSchema = new mongoose.Schema({
   deletedAt: { type: Date, default: null }
 }, { timestamps: true });
 
+// Hash new passwords before saving them in MongoDB.
 userSchema.pre('save', async function () {
   if (this.isModified('password')) this.password = await bcrypt.hash(this.password, 12);
 });

@@ -5,6 +5,7 @@ const Application = require('../models/applicationModel');
 const { verifyToken, login, logout } = require('../middlewares/verifyToken');
 const allowedRoles = require('../middlewares/allowedRoles');
 
+// employerId comes from the logged-in user, not the request body.
 const jobFields = ['title', 'company', 'description', 'location', 'employmentType',
   'salaryRange', 'requiredSkills', 'experienceRequirement', 'applicationDeadline', 'jobStatus'];
 
